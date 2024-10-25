@@ -84,7 +84,7 @@ export default {
     // Hareketi sesli okuma (Promise ile okuma bitinceye kadar bekleme)
     readMoveAloud(move) {
       return new Promise((resolve) => {
-        const utterance = new SpeechSynthesisUtterance(`${move.type}, ${move.side}`);
+        const utterance = new SpeechSynthesisUtterance(` ${move.side},${move.type}`);
         utterance.lang = 'tr-TR'; // Türkçe dil desteği
         
         // Ses hızı ayarı

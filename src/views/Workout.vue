@@ -23,7 +23,14 @@
         <button class="btn btn-danger mt-3" @click="stopWorkout">Kapat</button>
       </div>
       <div class="workout-move">
-        <p>{{ currentMove.type }} - {{ currentMove.side }}</p>
+        <p>{{ currentMove.side }}-{{ currentMove.type }} </p>
+      </div>
+      <div class="d-flex justify-content-end">
+        <button @click="changeSpeed('slower')" class="btn btn sm btn-warning btn-sm"><font-awesome-icon
+            :icon="['fas', 'fast-backward']" /></button>
+        {{ currentSpeed }}
+        <button @click="changeSpeed('faster')" class="btn btn sm btn-primary btn-sm"><font-awesome-icon
+            :icon="['fas', 'fast-forward']" /></button>
       </div>
     </div>
   </div>
@@ -36,6 +43,7 @@ export default {
       series: [], // Seriler buraya yüklenecek (LocalStorage'dan)
       selectedSeries: null, // Seçilen seri
       currentMove: null, // Şu an ekranda gösterilen hareket
+      currentSpeed: 1.5,
     };
   },
   mounted() {
@@ -44,14 +52,22 @@ export default {
     this.series = savedSeries;
   },
   methods: {
-    toBack(){
+    changeSpeed(state) {
+      if (state == 'faster') {
+        this.currentSpeed += 0.50
+      }
+      else{
+        this.currentSpeed -= 0.50
+      }
+    },
+    toBack() {
       this.$router.push('/'); // Workout sayfasına yönlendir
-    }, 
+    },
     // Antreman başlatma
     startWorkout(seri) {
       this.selectedSeries = seri; // Seçilen seriyi kaydet
       let index = 0; // İlk hareketten başla
-      
+
       // Hareketleri sırayla ekrana getiren ve sesli okuma ile senkronize eden işlev
       const nextMove = () => {
         // Seçilen serinin null olup olmadığını kontrol et
@@ -62,7 +78,7 @@ export default {
         if (index < this.selectedSeries.moves.length) {
           const move = this.selectedSeries.moves[index];
           this.currentMove = move; // Hareketi ekrana göster
-          
+
           // Hareketin adını sesli oku ve seslendirme tamamlandığında bir sonraki harekete geç
           this.readMoveAloud(move).then(() => {
             index++; // Bir sonraki harekete geç
@@ -73,28 +89,29 @@ export default {
           nextMove(); // Tekrar başlat
         }
       };
-      
+
       nextMove(); // İlk hareketi başlat
     },
     // Antremanı durdurma
     stopWorkout() {
       this.currentMove = null; // Ekranı temizle
       this.selectedSeries = null; // Seçimi sıfırla
+      this.currentSpeed=1
     },
     // Hareketi sesli okuma (Promise ile okuma bitinceye kadar bekleme)
     readMoveAloud(move) {
       return new Promise((resolve) => {
         const utterance = new SpeechSynthesisUtterance(` ${move.side},${move.type}`);
         utterance.lang = 'tr-TR'; // Türkçe dil desteği
-        
+
         // Ses hızı ayarı
-        utterance.rate = 1.5; // Ses hızını artırın (1.5 veya 1.7 gibi değerler deneyebilirsiniz)
-        
+        utterance.rate = this.currentSpeed; // Ses hızını artırın (1.5 veya 1.7 gibi değerler deneyebilirsiniz)
+
         // Sesli okuma bitince çözülür (resolve edilir)
         utterance.onend = () => {
           resolve();
         };
-        
+
         window.speechSynthesis.speak(utterance); // Hareketi oku
       });
     }

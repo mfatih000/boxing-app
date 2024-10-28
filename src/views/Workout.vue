@@ -16,15 +16,18 @@
       </ul>
     </div>
 
-    <!-- Hareketlerin Gösterimi -->
     <div v-if="currentMove" class="workout-display mt-4">
       <div class="d-flex justify-content-between align-items-center">
         <h3>{{ selectedSeries ? selectedSeries.name : '' }} Hareketleri</h3>
         <button class="btn btn-danger mt-3" @click="stopWorkout">Kapat</button>
       </div>
-      <div class="workout-move">
+      <div class="workout-move" v-if="!currentMove.side">
+        <p>{{ currentMove.type }} </p>
+      </div>
+      <div class="workout-move" v-else>
         <p>{{ currentMove.side }}-{{ currentMove.type }} </p>
       </div>
+
       <div class="d-flex justify-content-end">
         <button @click="changeSpeed('slower')" class="btn btn sm btn-warning btn-sm"><font-awesome-icon
             :icon="['fas', 'fast-backward']" /></button>
@@ -56,7 +59,7 @@ export default {
       if (state == 'faster') {
         this.currentSpeed += 0.50
       }
-      else{
+      else {
         this.currentSpeed -= 0.50
       }
     },
@@ -67,6 +70,7 @@ export default {
     startWorkout(seri) {
       this.selectedSeries = seri; // Seçilen seriyi kaydet
       let index = 0; // İlk hareketten başla
+      var moveCounter = 0; // Hareketleri saymak için sayaç
 
       // Hareketleri sırayla ekrana getiren ve sesli okuma ile senkronize eden işlev
       const nextMove = () => {
@@ -74,29 +78,48 @@ export default {
         if (!this.selectedSeries) {
           return; // Eğer null ise çık
         }
-
-        if (index < this.selectedSeries.moves.length) {
-          const move = this.selectedSeries.moves[index];
-          this.currentMove = move; // Hareketi ekrana göster
-
-          // Hareketin adını sesli oku ve seslendirme tamamlandığında bir sonraki harekete geç
-          this.readMoveAloud(move).then(() => {
-            index++; // Bir sonraki harekete geç
-            nextMove(); // Bir sonraki hareketi göster
+        // Eskiv kontrolü: Eğer sayacın değeri weaveInterval’a eşitse "Eskiv" mesajı göster
+        if (moveCounter == this.selectedSeries.weaveInterval) {
+          this.currentMove = { side: "", type: "Eskiv" }; // "Eskiv" mesajı için geçici hareket
+          this.readMoveAloud(this.currentMove).then(() => {
+            nextMove(); // "Eskiv" seslendirmesi tamamlandıktan sonra bir sonraki hareketi göster
           });
+          moveCounter=0
+          console.log(this.selectedSeries.weaveInterval)
+          console.log(moveCounter + " eskiv ")
+          // Hareket sayacını artır
         } else {
-          index = 0; // Hareketler bittiğinde başa dön
-          nextMove(); // Tekrar başlat
-        }
-      };
+          // Normal hareket göster
+          if (index < this.selectedSeries.moves.length) {
+            const move = this.selectedSeries.moves[index];
+            this.currentMove = move; // Hareketi ekrana göster
 
+            // Hareketin adını sesli oku ve seslendirme tamamlandığında bir sonraki harekete geç
+            this.readMoveAloud(move).then(() => {
+              index++; // Bir sonraki harekete geç
+              nextMove(); // Bir sonraki hareketi göster
+            });
+            
+          moveCounter++;
+          } else {
+            moveCounter=0
+            index = 0; // Hareketler bittiğinde başa dön
+            nextMove(); // Tekrar başlat
+            console.log(moveCounter + " yeniden")
+          }
+          console.log(this.selectedSeries.weaveInterval)
+          console.log(moveCounter)
+        }
+        // Hareket sayacını artır
+      };
       nextMove(); // İlk hareketi başlat
     },
+
     // Antremanı durdurma
     stopWorkout() {
       this.currentMove = null; // Ekranı temizle
       this.selectedSeries = null; // Seçimi sıfırla
-      this.currentSpeed=1
+      this.currentSpeed = 1
     },
     // Hareketi sesli okuma (Promise ile okuma bitinceye kadar bekleme)
     readMoveAloud(move) {

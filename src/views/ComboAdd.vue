@@ -11,9 +11,13 @@
 
     <!-- Seri Listesi -->
     <ul class="list-group mt-3">
-      <li v-for="(seri, index) in series" :key="index" class="list-group-item d-flex justify-content-between align-items-center">
+      <li v-for="(seri, index) in series" :key="index"
+        class="list-group-item d-flex justify-content-between align-items-center">
         {{ seri.name }}
-        <button class="btn btn-primary btn-sm" @click="showEditSeriesModal(index)">Düzenle</button>
+        <div>
+          <button class="btn btn-danger btn-sm me-1" @click="deleteSeries(seri.name)">Sil</button>
+          <button class="btn btn-primary btn-sm" @click="showEditSeriesModal(index)">Düzenle</button>
+        </div>
       </li>
     </ul>
 
@@ -22,6 +26,14 @@
       <div class="modal-content">
         <h5 class="modal-title">Seri Ekle</h5>
         <input type="text" v-model="newSeriesName" class="form-control" placeholder="Seri Adı">
+        <p class="mt-3">Eskiv Aralığı:</p>
+        <select v-model="weaveInterval" class="form-control">
+          <option value="random">Rastgele</option>
+          <option value="0">Yok</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+        </select>
         <div class="modal-footer">
           <button class="btn btn-secondary" @click="closeAddSeriesModal">Kapat</button>
           <button class="btn btn-primary" @click="addSeries">Ekle</button>
@@ -35,8 +47,10 @@
         <h5 class="modal-title">Hareket Ekle: {{ selectedSeries.name }}</h5>
 
         <!-- Mevcut hareketlerin listesi ve silme butonları -->
+        <h6>Eskiv Aralığı: {{ selectedSeries.weaveInterval }} Harekette Bir</h6>
         <ul class="list-group mt-3">
-          <li v-for="(move, moveIndex) in selectedSeries.moves" :key="moveIndex" class="list-group-item d-flex justify-content-between align-items-center">
+          <li v-for="(move, moveIndex) in selectedSeries.moves" :key="moveIndex"
+            class="list-group-item d-flex justify-content-between align-items-center">
             {{ move.type }} - {{ move.side }}
             <button class="btn btn-danger btn-sm" @click="removeMove(moveIndex)">Sil</button>
           </li>
@@ -75,6 +89,7 @@ export default {
       selectedSeriesIndex: null, // Düzenlenecek serinin indeksi
       newMoveType: '', // Yeni hareket tipi
       newMoveSide: '', // Yeni hareket tarafı
+      weaveInterval: '', // Yeni hareket tarafı
       isAddSeriesModalVisible: false, // Seri ekleme modal görünürlüğü
       isEditSeriesModalVisible: false // Hareket ekleme modal görünürlüğü
     };
@@ -87,7 +102,7 @@ export default {
     }
   },
   methods: {
-    toBack(){
+    toBack() {
       this.$router.push('/'); // Workout sayfasına yönlendir
     },
     // Seri ekle modalını göster
@@ -102,12 +117,23 @@ export default {
     // Yeni seri ekle
     addSeries() {
       if (this.newSeriesName) {
-        this.series.push({ name: this.newSeriesName, moves: [] });
+        this.series.push({ name: this.newSeriesName, moves: [], weaveInterval: this.weaveInterval });
         this.saveToLocalStorage(); // Seriyi kaydet
         this.closeAddSeriesModal(); // Modalı kapat
       }
+      console.log(this.series)
     },
-    // Hareket ekleme modalını göster
+    deleteSeries(seriesName) {
+      // Kullanıcıya silme işlemi için onay sorusu
+      const confirmation = confirm(`"${seriesName}" adlı seriyi silmek istediğinize emin misiniz?`);
+
+      // Onay verildiyse silme işlemini gerçekleştir
+      if (confirmation) {
+        this.series = this.series.filter(seri => seri.name !== seriesName);
+        this.saveToLocalStorage(); // Güncellenmiş seriyi kaydet
+      }
+    },
+
     showEditSeriesModal(index) {
       this.selectedSeries = this.series[index]; // Düzenlenecek seriyi seç
       this.selectedSeriesIndex = index;
@@ -115,6 +141,7 @@ export default {
       this.newMoveSide = ''; // Tarafı sıfırla
       this.isEditSeriesModalVisible = true; // Modalı göster
     },
+
     // Hareket ekleme modalını kapat
     closeEditSeriesModal() {
       this.isEditSeriesModalVisible = false; // Modalı kapat
@@ -148,9 +175,12 @@ export default {
 <style scoped>
 /* Genel Arka Plan */
 body {
-  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); /* Gradient geçiş: koyu mor, lacivert ve koyu gri tonlar */
-  color: white; /* Metinler için beyaz */
-  font-family: 'Roboto', sans-serif; /* Sportif bir yazı stili */
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  /* Gradient geçiş: koyu mor, lacivert ve koyu gri tonlar */
+  color: white;
+  /* Metinler için beyaz */
+  font-family: 'Roboto', sans-serif;
+  /* Sportif bir yazı stili */
   margin: 0;
   padding: 0;
   height: 100vh;
@@ -166,7 +196,8 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.836); /* Daha koyu ve yoğun bir opaklık */
+  background-color: rgba(0, 0, 0, 0.836);
+  /* Daha koyu ve yoğun bir opaklık */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -174,12 +205,15 @@ body {
 
 .modal-content {
   /* background-color: rgba(255, 255, 255, 0.753);  */
-  border: 2px solid #f44336; /* Kırmızı kenarlık */
+  border: 2px solid #f44336;
+  /* Kırmızı kenarlık */
   /* box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.6);  */
   padding: 20px;
-  border-radius: 12px; /* Daha yuvarlak köşeler */
+  border-radius: 12px;
+  /* Daha yuvarlak köşeler */
   width: 400px;
-  color: #fff; /* Beyaz metin */
+  color: #fff;
+  /* Beyaz metin */
 }
 
 .modal-footer {
@@ -198,30 +232,39 @@ button {
 }
 
 .btn-success {
-  background-color: #28a745; /* Yeşil buton */
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3); /* Hafif gölge */
+  background-color: #28a745;
+  /* Yeşil buton */
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3);
+  /* Hafif gölge */
 }
 
 .btn-success:hover {
-  background-color: #218838; /* Daha koyu yeşil */
+  background-color: #218838;
+  /* Daha koyu yeşil */
 }
 
 .btn-primary {
-  background-color: #007bff; /* Mavi buton */
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3); /* Hafif gölge */
+  background-color: #007bff;
+  /* Mavi buton */
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3);
+  /* Hafif gölge */
 }
 
 .btn-primary:hover {
-  background-color: #0056b3; /* Daha koyu mavi */
+  background-color: #0056b3;
+  /* Daha koyu mavi */
 }
 
 .btn-danger {
-  background-color: #dc3545; /* Kırmızı buton */
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3); /* Hafif gölge */
+  background-color: #dc3545;
+  /* Kırmızı buton */
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3);
+  /* Hafif gölge */
 }
 
 .btn-danger:hover {
-  background-color: #c82333; /* Daha koyu kırmızı */
+  background-color: #c82333;
+  /* Daha koyu kırmızı */
 }
 
 /* Liste Stilleri */
@@ -232,26 +275,29 @@ ul.list-group {
 }
 
 .list-group-item {
-  background-color: rgba(255, 255, 255, 0.678); /* Hafif şeffaf item */
-  border: 1px solid #f44336; /* Kırmızı kenarlık */
+  background-color: rgba(255, 255, 255, 0.678);
+  /* Hafif şeffaf item */
+  border: 1px solid #f44336;
+  /* Kırmızı kenarlık */
   padding: 10px;
   margin-bottom: 10px;
   border-radius: 10px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.5); /* Hafif gölgeler */
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.5);
+  /* Hafif gölgeler */
 }
 
 /* Form Stilleri */
 
 
 /* Hover ve Focus Efektleri */
-input.form-control:focus, select.form-control:focus {
+input.form-control:focus,
+select.form-control:focus {
   outline: none;
-  border-color: #f44336; /* Kırmızı renkte odaklanma */
+  border-color: #f44336;
+  /* Kırmızı renkte odaklanma */
   box-shadow: 0px 0px 5px #f44336;
 }
 </style>
-
-

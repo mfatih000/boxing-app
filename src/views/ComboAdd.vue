@@ -1,7 +1,7 @@
 <template>
-  <div class="m-3">
+  <div class="workout-main">
     <div class="d-flex justify-content-between align-items-center mb-2">
-      <h1>Serilerim</h1>
+      <h1 class="page-title">Serilerim</h1>
       <button class="btn btn-secondary" @click="toBack()">Geri</button>
     </div>
     <!-- Seri Ekle Butonu -->
@@ -28,8 +28,7 @@
         <input type="text" v-model="newSeriesName" class="form-control" placeholder="Seri Adı">
         <p class="mt-3">Eskiv Aralığı:</p>
         <select v-model="weaveInterval" class="form-control">
-          <option value="random">Rastgele</option>
-          <option value="0">Yok</option>
+          <option value="-1">Yok</option>
           <option value="1">1</option>
           <option value="2">2</option>
           <option value="3">3</option>
@@ -59,15 +58,19 @@
         <!-- Yeni Hareket Ekle -->
         <p class="mt-3">Hareket Türü Seç:</p>
         <select v-model="newMoveType" class="form-control">
-          <option value="kroşe">Kroşe</option>
-          <option value="direkt">Direkt</option>
-          <option value="aparkat">Aparkat</option>
+          <option value="Kroşe">Kroşe</option>
+          <option value="Direkt">Direkt</option>
+          <option value="Aparkat">Aparkat</option>
+          <option value="Yüksek Tekme">Yüksek Tekme</option>
+          <option value="Yan Tekme">Yan Tekme</option>
+          <option value="Bacağa Tekme">Bacağa Tekme</option>
+          <option value="Direkt Tekme">Direkt Tekme</option>
         </select>
 
         <p class="mt-3">Taraf Seç:</p>
         <select v-model="newMoveSide" class="form-control">
-          <option value="sağ">Sağ</option>
-          <option value="sol">Sol</option>
+          <option value="Sağ">Sağ</option>
+          <option value="Sol">Sol</option>
         </select>
 
         <div class="modal-footer">
@@ -89,7 +92,7 @@ export default {
       selectedSeriesIndex: null, // Düzenlenecek serinin indeksi
       newMoveType: '', // Yeni hareket tipi
       newMoveSide: '', // Yeni hareket tarafı
-      weaveInterval: '', // Yeni hareket tarafı
+      weaveInterval: -1, 
       isAddSeriesModalVisible: false, // Seri ekleme modal görünürlüğü
       isEditSeriesModalVisible: false // Hareket ekleme modal görünürlüğü
     };
@@ -103,31 +106,24 @@ export default {
   },
   methods: {
     toBack() {
-      this.$router.push('/'); // Workout sayfasına yönlendir
+      this.$router.push('/'); // Geri sayfasına yönlendir
     },
-    // Seri ekle modalını göster
     showAddSeriesModal() {
       this.newSeriesName = ''; // Seri adı alanını temizle
       this.isAddSeriesModalVisible = true; // Modalı göster
     },
-    // Seri ekleme modalını kapat
     closeAddSeriesModal() {
       this.isAddSeriesModalVisible = false; // Modalı kapat
     },
-    // Yeni seri ekle
     addSeries() {
       if (this.newSeriesName) {
         this.series.push({ name: this.newSeriesName, moves: [], weaveInterval: this.weaveInterval });
         this.saveToLocalStorage(); // Seriyi kaydet
         this.closeAddSeriesModal(); // Modalı kapat
       }
-      console.log(this.series)
     },
     deleteSeries(seriesName) {
-      // Kullanıcıya silme işlemi için onay sorusu
       const confirmation = confirm(`"${seriesName}" adlı seriyi silmek istediğinize emin misiniz?`);
-
-      // Onay verildiyse silme işlemini gerçekleştir
       if (confirmation) {
         this.series = this.series.filter(seri => seri.name !== seriesName);
         this.saveToLocalStorage(); // Güncellenmiş seriyi kaydet
@@ -142,11 +138,9 @@ export default {
       this.isEditSeriesModalVisible = true; // Modalı göster
     },
 
-    // Hareket ekleme modalını kapat
     closeEditSeriesModal() {
       this.isEditSeriesModalVisible = false; // Modalı kapat
     },
-    // Yeni hareket ekle
     addMove() {
       if (this.newMoveType && this.newMoveSide) {
         this.series[this.selectedSeriesIndex].moves.push({
@@ -155,32 +149,32 @@ export default {
         });
         this.saveToLocalStorage(); // Hareketi kaydet
         this.newMoveType = ''; // Hareket tipini sıfırla
-        this.newMoveSide = '';
-        // this.closeEditSeriesModal(); // Modalı kapat
+        this.newMoveSide = ''; // Tarafı sıfırla
       }
     },
-    // Hareketi seriden sil
     removeMove(moveIndex) {
-      this.series[this.selectedSeriesIndex].moves.splice(moveIndex, 1); // Hareketi diziden kaldır
-      this.saveToLocalStorage(); // Seriyi güncelle ve kaydet
+      this.series[this.selectedSeriesIndex].moves.splice(moveIndex, 1); // Hareketi sil
+      this.saveToLocalStorage(); // Seriyi güncelle
     },
-    // localStorage'a kaydetme işlemi
     saveToLocalStorage() {
-      localStorage.setItem('series', JSON.stringify(this.series)); // Serileri localStorage'a kaydet
+      localStorage.setItem('series', JSON.stringify(this.series)); // Serileri kaydet
     }
   }
 };
 </script>
 
 <style scoped>
-/* Genel Arka Plan */
-body {
-  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-  /* Gradient geçiş: koyu mor, lacivert ve koyu gri tonlar */
+.workout-main {
+  background-color: #333;/* Dark textured background */
+  padding: 5%;
   color: white;
-  /* Metinler için beyaz */
+  height: 100vh;
+}
+
+body {
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); /* Dark gradient background */
+  color: white; /* White text */
   font-family: 'Roboto', sans-serif;
-  /* Sportif bir yazı stili */
   margin: 0;
   padding: 0;
   height: 100vh;
@@ -189,7 +183,7 @@ body {
   align-items: center;
 }
 
-/* Modal Stil */
+/* Modal Overlay */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -197,32 +191,22 @@ body {
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.836);
-  /* Daha koyu ve yoğun bir opaklık */
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
+/* Modal Content */
 .modal-content {
-  /* background-color: rgba(255, 255, 255, 0.753);  */
-  border: 2px solid #f44336;
-  /* Kırmızı kenarlık */
-  /* box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.6);  */
   padding: 20px;
-  border-radius: 12px;
-  /* Daha yuvarlak köşeler */
+  border: 2px solid #f44336; /* Red border */
+  border-radius: 12px; /* Rounded corners */
+  background-color: #2a2a2a;
+  color: white;
   width: 400px;
-  color: #fff;
-  /* Beyaz metin */
 }
 
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 10px;
-}
-
-/* Butonlar için stil */
+/* Buttons */
 button {
   border: none;
   padding: 10px 20px;
@@ -232,72 +216,29 @@ button {
 }
 
 .btn-success {
-  background-color: #28a745;
-  /* Yeşil buton */
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3);
-  /* Hafif gölge */
-}
-
-.btn-success:hover {
-  background-color: #218838;
-  /* Daha koyu yeşil */
-}
-
-.btn-primary {
-  background-color: #007bff;
-  /* Mavi buton */
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3);
-  /* Hafif gölge */
-}
-
-.btn-primary:hover {
-  background-color: #0056b3;
-  /* Daha koyu mavi */
+  background-color: #1a4424;
 }
 
 .btn-danger {
-  background-color: #dc3545;
-  /* Kırmızı buton */
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3);
-  /* Hafif gölge */
+  background-color: #7c160e;
 }
 
-.btn-danger:hover {
-  background-color: #c82333;
-  /* Daha koyu kırmızı */
+.btn-primary {
+  background-color: #555704;
 }
 
-/* Liste Stilleri */
-ul.list-group {
-  list-style-type: none;
-  padding: 0;
-  margin-top: 20px;
+button:hover {
+  opacity: 0.85;
 }
 
 .list-group-item {
-  background-color: rgba(255, 255, 255, 0.678);
-  /* Hafif şeffaf item */
-  border: 1px solid #f44336;
-  /* Kırmızı kenarlık */
-  padding: 10px;
-  margin-bottom: 10px;
-  border-radius: 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.5);
-  /* Hafif gölgeler */
-}
+  background-color: #343a40; 
+  border: 1px solid #444;
+color: aliceblue;}
 
-/* Form Stilleri */
-
-
-/* Hover ve Focus Efektleri */
-input.form-control:focus,
-select.form-control:focus {
-  outline: none;
-  border-color: #f44336;
-  /* Kırmızı renkte odaklanma */
-  box-shadow: 0px 0px 5px #f44336;
+.page-title {
+  font-size: 1.5rem;
+  color: #fff;
+  font-weight: bold;
 }
 </style>

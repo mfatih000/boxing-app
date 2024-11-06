@@ -1,25 +1,39 @@
-<template>
-  <div class="m-3">
+<template class="">
+  <div class="workout-main ">
     <div class="d-flex justify-content-between align-items-center">
       <h1>Workout</h1>
       <button class="btn btn-secondary" @click="toBack()">Geri</button>
     </div>
     <!-- Seri Listesi -->
-    <div v-if="series.length > 0">
+    <div class="series-part" v-if="series.length > 0 && selectedSeries == null">
       <h3>Seriler</h3>
       <ul class="list-group">
-        <li v-for="(seri, index) in series" :key="index" class="list-group-item">
-          <button class="btn btn-primary" @click="startWorkout(seri)">
+     <template  v-for="(seri, index) in series" :key="index" >
+      <li class="list-group-item"  @click="startWorkout(seri)">
+          <button class="btn btn-primary">
             {{ seri.name }}
           </button>
         </li>
+     </template>
       </ul>
     </div>
 
+    <div v-if="series.length == 0">
+      KAYITLI SERİNİZ BULUNMAMAKTADIR.LÜTFEN EKLEME EKRANINDAN BİR SERİ EKLEYİNİZ.
+    </div>
+
     <div v-if="currentMove" class="workout-display mt-4">
+      <div>
+        <div class="d-flex justify-content-end" >
+          <button class="btn btn-primary mt-3" @click="stopWorkout">Kapat</button>
+        </div>
+        <ul>
+          <p v-for="(item, index) in selectedSeries.moves" :key="index"><button disabled="true"
+              class="btn btn-warning mb-1">{{ item.side }}-{{ item.type }}</button></p>
+        </ul>
+      </div>
       <div class="d-flex justify-content-between align-items-center">
-        <h3>{{ selectedSeries ? selectedSeries.name : '' }} Hareketleri</h3>
-        <button class="btn btn-danger mt-3" @click="stopWorkout">Kapat</button>
+        <h3>{{ selectedSeries ? selectedSeries.name : '' }}</h3>
       </div>
       <div class="workout-move" v-if="!currentMove.side">
         <p>{{ currentMove.type }} </p>
@@ -31,7 +45,7 @@
       <div class="d-flex justify-content-end">
         <button @click="changeSpeed('slower')" class="btn btn sm btn-warning btn-sm"><font-awesome-icon
             :icon="['fas', 'fast-backward']" /></button>
-        {{ currentSpeed }}
+       <button class="btn btn-secondary mx-1"> {{ currentSpeed }}</button>
         <button @click="changeSpeed('faster')" class="btn btn sm btn-primary btn-sm"><font-awesome-icon
             :icon="['fas', 'fast-forward']" /></button>
       </div>
@@ -46,7 +60,7 @@ export default {
       series: [], // Seriler buraya yüklenecek (LocalStorage'dan)
       selectedSeries: null, // Seçilen seri
       currentMove: null, // Şu an ekranda gösterilen hareket
-      currentSpeed: 1.5,
+      currentSpeed: 4,
     };
   },
   mounted() {
@@ -84,7 +98,7 @@ export default {
           this.readMoveAloud(this.currentMove).then(() => {
             nextMove(); // "Eskiv" seslendirmesi tamamlandıktan sonra bir sonraki hareketi göster
           });
-          moveCounter=0
+          moveCounter = 0
           console.log(this.selectedSeries.weaveInterval)
           console.log(moveCounter + " eskiv ")
           // Hareket sayacını artır
@@ -99,10 +113,10 @@ export default {
               index++; // Bir sonraki harekete geç
               nextMove(); // Bir sonraki hareketi göster
             });
-            
-          moveCounter++;
+
+            moveCounter++;
           } else {
-            moveCounter=0
+            moveCounter = 0
             index = 0; // Hareketler bittiğinde başa dön
             nextMove(); // Tekrar başlat
             console.log(moveCounter + " yeniden")
@@ -119,25 +133,42 @@ export default {
     stopWorkout() {
       this.currentMove = null; // Ekranı temizle
       this.selectedSeries = null; // Seçimi sıfırla
-      this.currentSpeed = 1
+      this.currentSpeed = 4;
+      window.speechSynthesis.cancel(); // Tüm seslendirmeleri iptal et
     },
+
     // Hareketi sesli okuma (Promise ile okuma bitinceye kadar bekleme)
     readMoveAloud(move) {
       return new Promise((resolve) => {
-        const utterance = new SpeechSynthesisUtterance(` ${move.side},${move.type}`);
-        utterance.lang = 'tr-TR'; // Türkçe dil desteği
+        // Eski sesli okumaları temizle
+        window.speechSynthesis.cancel();
 
-        // Ses hızı ayarı
-        utterance.rate = this.currentSpeed; // Ses hızını artırın (1.5 veya 1.7 gibi değerler deneyebilirsiniz)
+        // `move.side` için Türkçe seslendirme
+        const sideUtterance = new SpeechSynthesisUtterance(move.side);
+        sideUtterance.lang = 'tr-TR'; // `move.side` Türkçe okunacak
+        sideUtterance.rate = this.currentSpeed;
 
-        // Sesli okuma bitince çözülür (resolve edilir)
-        utterance.onend = () => {
+        // `move.type` için dil seçimi (içinde 'kick' varsa İngilizce, yoksa Türkçe)
+        const typeUtterance = new SpeechSynthesisUtterance(move.type);
+        typeUtterance.lang = move.type.toLowerCase().includes('kick') ? 'en-US' : 'tr-TR';
+        typeUtterance.rate = this.currentSpeed;
+
+        // `side` seslendirme bittikten sonra `type` seslendirme başlatılır
+        sideUtterance.onend = () => {
+          window.speechSynthesis.speak(typeUtterance);
+        };
+
+        // `type` seslendirme bittikten sonra Promise çözülür
+        typeUtterance.onend = () => {
           resolve();
         };
 
-        window.speechSynthesis.speak(utterance); // Hareketi oku
+        // İlk olarak `side` seslendirmesi başlatılır
+        window.speechSynthesis.speak(sideUtterance);
       });
     }
+
+
   },
   beforeDestroy() {
     // Sayfa değişikliğinde veya bileşen yok olduğunda interval'ı temizle
@@ -149,19 +180,61 @@ export default {
 </script>
 
 <style scoped>
-.workout-display {
-  background-color: #1f1f1f;
-  padding: 20px;
-  border-radius: 10px;
+.workout-main {
+  background: linear-gradient(to bottom, #1b1b1b, #121212); /* Dark textured background */
+  padding: 5%;
   color: white;
+  height: 100vh;
 }
 
-.workout-move {
-  font-size: 1.5em;
-  margin: 10px 0;
-  background-color: #333;
-  padding: 10px;
-  border-radius: 5px;
-  text-align: center;
+.workout-display {
+  background-color: #333; /* Dark, semi-transparent */
+  padding: 20px;
+  border-radius: 8px;
+  color: white;
+  box-shadow: 0px 0px 10px 2px #7c160e; /* Red glow effect */
 }
+
+.series-part {
+  background-color: #333; /* Transparent black */
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+button {
+  border: none;
+  color: white;
+  font-weight: bold;
+}
+
+.btn-primary {
+  background-color: #64130d;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.5); /* Adds depth */
+}
+
+.btn-warning {
+  background-color: #ffd966;
+  color: black;
+}
+
+ul {
+  list-style-type: none; /* Remove bullet points */
+  padding: 0;
+}
+
+ul li {
+  background-color: #2c2c2c; /* Dark grey background for the list items */
+  color: white; /* White text for contrast */
+  padding: 12px 20px; /* Add padding for spacing */
+  border-radius: 6px; /* Rounded corners */
+  margin-bottom: 10px; /* Space between list items */
+  display: flex;
+  justify-content: space-between; /* Space out button and text */
+  align-items: center;
+  transition: background-color 0.3s ease; /* Smooth transition for hover effect */
+}
+
+
+
 </style>

@@ -2,10 +2,10 @@
   <div class="d-flex justify-content-center align-items-center vh-100 home-background">
     <div class="text-center">
       <div class="mb-4">
-        <button @click="goToWorkout" class="btn home-button">Kayıtlı Serilerim</button>
+        <button @click="goToWorkout" class="btn home-button">Model Çalış</button>
       </div>
       <div>
-        <button @click="goToComboAdd" class="btn home-button">Seri Ekle</button>
+        <button @click="goToComboAdd" class="btn home-button">Model Ekle</button>
       </div>
     </div>
   </div>

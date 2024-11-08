@@ -1,12 +1,12 @@
 <template class="">
   <div class="workout-main ">
-    <div class="d-flex justify-content-between align-items-center">
-      <h1>Workout</h1>
+    <div class="d-flex justify-content-between align-items-center mb-1">
+      <h1>Model Çalış</h1>
       <button class="btn btn-secondary" @click="toBack()">Geri</button>
     </div>
     <!-- Seri Listesi -->
     <div class="series-part" v-if="series.length > 0 && selectedSeries == null">
-      <h3>Seriler</h3>
+      <h3>Modellerim</h3>
       <ul class="list-group">
      <template  v-for="(seri, index) in series" :key="index" >
       <li class="list-group-item"  @click="startWorkout(seri)">
@@ -18,38 +18,45 @@
       </ul>
     </div>
 
-    <div v-if="series.length == 0">
+    <div  class="d-flex justify-content-between align-items-center" v-if="series.length == 0">
       KAYITLI SERİNİZ BULUNMAMAKTADIR.LÜTFEN EKLEME EKRANINDAN BİR SERİ EKLEYİNİZ.
     </div>
 
     <div v-if="currentMove" class="workout-display mt-4">
-      <div>
-        <div class="d-flex justify-content-end" >
-          <button class="btn btn-primary mt-3" @click="stopWorkout">Kapat</button>
-        </div>
-        <ul>
-          <p v-for="(item, index) in selectedSeries.moves" :key="index"><button disabled="true"
-              class="btn btn-warning mb-1">{{ item.side }}-{{ item.type }}</button></p>
-        </ul>
-      </div>
-      <div class="d-flex justify-content-between align-items-center">
-        <h3>{{ selectedSeries ? selectedSeries.name : '' }}</h3>
-      </div>
-      <div class="workout-move" v-if="!currentMove.side">
-        <p>{{ currentMove.type }} </p>
-      </div>
-      <div class="workout-move" v-else>
-        <p>{{ currentMove.side }}-{{ currentMove.type }} </p>
-      </div>
-
+    <div>
       <div class="d-flex justify-content-end">
-        <button @click="changeSpeed('slower')" class="btn btn sm btn-warning btn-sm"><font-awesome-icon
-            :icon="['fas', 'fast-backward']" /></button>
-       <button class="btn btn-secondary mx-1"> {{ currentSpeed }}</button>
-        <button @click="changeSpeed('faster')" class="btn btn sm btn-primary btn-sm"><font-awesome-icon
-            :icon="['fas', 'fast-forward']" /></button>
+        <button class="btn btn-primary mt-3" @click="stopWorkout">Kapat</button>
       </div>
+      <ul>
+        <p v-for="(item, index) in weaveList" :key="index">
+          <template v-if="item === 'ESKİV'">
+            <button disabled class="btn btn-danger mb-1">Eskiv</button>
+          </template>
+          <template v-else>
+            <button disabled class="btn btn-warning mb-1">{{ item.side }}-{{ item.type }}</button>
+          </template>
+        </p>
+      </ul>
     </div>
+    <div class="d-flex justify-content-between align-items-center">
+      <h3>{{ selectedSeries ? selectedSeries.name : '' }}</h3>
+    </div>
+    <div class="workout-move" v-if="!currentMove.side">
+      <p>{{ currentMove.type }}</p>
+    </div>
+    <div class="workout-move" v-else>
+      <p>{{ currentMove.side }}-{{ currentMove.type }}</p>
+    </div>
+    <div class="d-flex justify-content-end">
+      <button @click="changeSpeed('slower')" class="btn btn sm btn-warning btn-sm">
+        <font-awesome-icon :icon="['fas', 'fast-backward']" />
+      </button>
+      <button class="btn btn-secondary mx-1"> {{ currentSpeed }}</button>
+      <button @click="changeSpeed('faster')" class="btn btn sm btn-primary btn-sm">
+        <font-awesome-icon :icon="['fas', 'fast-forward']" />
+      </button>
+    </div>
+  </div>
   </div>
 </template>
 
@@ -60,8 +67,25 @@ export default {
       series: [], // Seriler buraya yüklenecek (LocalStorage'dan)
       selectedSeries: null, // Seçilen seri
       currentMove: null, // Şu an ekranda gösterilen hareket
-      currentSpeed: 4,
+      currentSpeed: 3,
     };
+  },
+  computed: {
+    // Hareket listesini weaveInterval değerine göre düzenleyerek "ESKİV" ekler
+    weaveList() {
+      if (!this.selectedSeries || this.selectedSeries.weaveInterval <= 0) {
+        return this.selectedSeries ? this.selectedSeries.moves : [];
+      }
+
+      const movesWithWeave = [];
+      this.selectedSeries.moves.forEach((move, index) => {
+        movesWithWeave.push(move);
+        if ((index + 1) % this.selectedSeries.weaveInterval === 0) {
+          movesWithWeave.push('ESKİV');
+        }
+      });
+      return movesWithWeave;
+    },
   },
   mounted() {
     // LocalStorage'dan serileri yükle
@@ -71,10 +95,10 @@ export default {
   methods: {
     changeSpeed(state) {
       if (state == 'faster') {
-        this.currentSpeed += 0.50
+        this.currentSpeed += 0.25
       }
       else {
-        this.currentSpeed -= 0.50
+        this.currentSpeed -= 0.25
       }
     },
     toBack() {
@@ -99,8 +123,6 @@ export default {
             nextMove(); // "Eskiv" seslendirmesi tamamlandıktan sonra bir sonraki hareketi göster
           });
           moveCounter = 0
-          console.log(this.selectedSeries.weaveInterval)
-          console.log(moveCounter + " eskiv ")
           // Hareket sayacını artır
         } else {
           // Normal hareket göster
@@ -119,10 +141,8 @@ export default {
             moveCounter = 0
             index = 0; // Hareketler bittiğinde başa dön
             nextMove(); // Tekrar başlat
-            console.log(moveCounter + " yeniden")
+            // console.log(moveCounter + " yeniden")
           }
-          console.log(this.selectedSeries.weaveInterval)
-          console.log(moveCounter)
         }
         // Hareket sayacını artır
       };
@@ -197,9 +217,8 @@ export default {
 
 .series-part {
   background-color: #333; /* Transparent black */
-  padding: 15px;
+  padding: 5%;
   border-radius: 8px;
-  margin-bottom: 20px;
 }
 
 button {

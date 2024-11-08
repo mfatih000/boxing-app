@@ -1,12 +1,12 @@
 <template>
   <div class="workout-main">
     <div class="d-flex justify-content-between align-items-center mb-2">
-      <h1 class="page-title">Serilerim</h1>
+      <h1 class="page-title">Modellerim</h1>
       <button class="btn btn-secondary" @click="toBack()">Geri</button>
     </div>
     <!-- Seri Ekle Butonu -->
     <div class="d-flex justify-content-end">
-      <button class="btn btn-success" @click="showAddSeriesModal">Seri Ekle</button>
+      <button class="btn btn-success" @click="showAddSeriesModal">Model Ekle</button>
     </div>
 
     <!-- Seri Listesi -->
@@ -24,8 +24,8 @@
     <!-- Seri Ekle Modal -->
     <div v-if="isAddSeriesModalVisible" class="modal-overlay">
       <div class="modal-content">
-        <h5 class="modal-title">Seri Ekle</h5>
-        <input type="text" v-model="newSeriesName" class="form-control" placeholder="Seri Adı">
+        <h5 class="modal-title">Model Ekle</h5>
+        <input type="text" v-model="newSeriesName" class="form-control" placeholder="Model Adı">
         <p class="mt-3">Eskiv Aralığı:</p>
         <select v-model="weaveInterval" class="form-control">
           <option value="-1">Yok</option>
@@ -120,6 +120,13 @@ export default {
         this.series.push({ name: this.newSeriesName, moves: [], weaveInterval: this.weaveInterval });
         this.saveToLocalStorage(); // Seriyi kaydet
         this.closeAddSeriesModal(); // Modalı kapat
+
+        const newIndex = this.series.length - 1;
+        this.showEditSeriesModal(newIndex);
+        
+        // console.log('son seri tümü:'+this.series[this.series.length-1])
+        // console.log('son seri no:' + (this.series.length - 1));
+        // console.log('total seri no:'+this.series.length)
       }
     },
     deleteSeries(seriesName) {
